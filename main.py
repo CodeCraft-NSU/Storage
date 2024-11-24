@@ -3,11 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from dotenv import load_dotenv
-from project import router as project_router
-import os
-
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
+import os
+
+from project import router as project_router
+from upload import router as upload_router
 
 app = FastAPI(debug=True)
 
@@ -46,3 +47,4 @@ async def root():
     return {"message": "root of PMS Storage Server API."}
 
 app.include_router(project_router, prefix="/api")
+app.include_router(upload_router, prefix="/api")
