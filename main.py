@@ -9,6 +9,7 @@ import os
 
 from project import router as project_router
 from upload import router as upload_router
+from output import router as output_router
 
 app = FastAPI(debug=True)
 
@@ -48,3 +49,4 @@ async def root():
 
 app.include_router(project_router, prefix="/api")
 app.include_router(upload_router, prefix="/api")
+app.include_router(output_router, prefix="/api")
