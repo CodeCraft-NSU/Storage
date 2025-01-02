@@ -13,17 +13,17 @@ from output import router as output_router
 
 app = FastAPI(debug=True)
 
-load_dotenv()
-API_KEY = os.getenv('API_KEY')
+# load_dotenv()
+# API_KEY = os.getenv('API_KEY')
 
-class APIKeyMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        authorization = request.headers.get("Authorization")
-        if authorization != API_KEY:
-            raise HTTPException(status_code=401, detail="Unauthorized")
-        return await call_next(request)
+# class APIKeyMiddleware(BaseHTTPMiddleware):
+#     async def dispatch(self, request: Request, call_next):
+#         authorization = request.headers.get("Authorization")
+#         if authorization != API_KEY:
+#             raise HTTPException(status_code=401, detail="Unauthorized")
+#         return await call_next(request)
 
-app.add_middleware(APIKeyMiddleware)
+# app.add_middleware(APIKeyMiddleware)
 
 # 예외 핸들러
 @app.exception_handler(Exception)

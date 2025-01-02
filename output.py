@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, File, UploadFile, Form
+from fastapi import APIRouter, HTTPException, File, UploadFile, Form, Query
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from datetime import datetime
 import os
@@ -33,3 +34,14 @@ async def add_other_document(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error during file upload: {str(e)}")
+
+@router.post("/output/otherdoc_download")
+async def download_otherdoc(file_path: str = Form(...)):
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found on storage server")
+    print(file_path)
+    return FileResponse(
+        path=file_path,
+        filename=os.path.basename(file_path),
+        media_type='application/octet-stream'
+    )
