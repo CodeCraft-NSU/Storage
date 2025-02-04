@@ -29,16 +29,16 @@ async def api_ccp_push(pid: int):
 
 @router.post("/ccp/pull")
 async def api_ccp_pull(
-    pid: int,
-    data: UploadFile = File(...),
+    pid: int = Form(...),
+    file: UploadFile = File(...),
     name: str = Form(...)
 ):
     if not init_ccp_folder(str(pid)):
-        raise HTTPException(status_code=500, detail=f"Failed to initialize folder")
-    file_path = f"/data/CCP/{pid}/{name}.ccp"
+        raise HTTPException(status_code=500, detail="Failed to initialize folder")
+    file_path = f"/data/CCP/{pid}/{name}"
     try:
         with open(file_path, "wb") as f:
-            f.write(await data.read())
-        return {"RESULT_CODE": 200,"RESULT_MSG": "File uploaded successfully"}
+            f.write(await file.read())
+        return {"RESULT_CODE": 200, "RESULT_MSG": "File uploaded successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error during file upload: {str(e)}")
