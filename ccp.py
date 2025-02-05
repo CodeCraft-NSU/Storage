@@ -42,3 +42,18 @@ async def api_ccp_pull(
         return {"RESULT_CODE": 200, "RESULT_MSG": "File uploaded successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error during file upload: {str(e)}")
+
+@router.post("/ccp/push_ccp")
+async def api_ccp_push_ccp(
+    pid: int = Query(..., description="Project ID"),
+    ver: int = Query(..., description="Version number of the CCP file")
+):
+    file_path = f"/data/CCP/{pid}/{pid}_{ver}.ccp"
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="CCP file not found")
+    
+    return FileResponse(
+        file_path,
+        media_type="application/octet-stream",
+        filename=f"{pid}_{ver}.ccp"
+    )
