@@ -100,5 +100,15 @@ async def api_ccp_pull_output(
     except Exception as e:
         logging.error(f"Error during extraction of OUTPUT archive for pid {pid}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error during extraction of OUTPUT archive: {str(e)}")
+    required_folders = ["WBS", "MM", "SD", "OD", "RS", "UT", "IT", "ETC"]
+    try:
+        for folder in required_folders:
+            folder_path = os.path.join(pms_folder, folder)
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path)
+                logging.info(f"Created missing folder: {folder_path}")
+    except Exception as e:
+        logging.error(f"Error ensuring required folders in PMS folder for pid {pid}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error ensuring required folders: {str(e)}")
     
     return JSONResponse(content={"RESULT_CODE": 200, "RESULT_MSG": "Output file uploaded and extracted successfully"})
