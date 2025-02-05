@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException, File, UploadFile, Form, Query
 from fastapi.responses import FileResponse
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from datetime import datetime
-import os, shutil, tarfile
+import os, shutil, tarfile, logging
 
 router = APIRouter()
 
@@ -67,13 +68,21 @@ async def api_ccp_pull_output(
     pms_folder = f"/data/PMS/{pid}"
     try:
         if os.path.exists(pms_folder):
-            shutil.rmtree(pms_folder)
-            logging.info(f"Deleted existing folder: {pms_folder}")
-        os.makedirs(pms_folder, exist_ok=True)
-        logging.info(f"Created new folder: {pms_folder}")
+            for entry in os.listdir(pms_folder):
+                entry_path = os.path.join(pms_folder, entry)
+                try:
+                    if os.path.isfile(entry_path) or os.path.islink(entry_path):
+                        os.unlink(entry_path)
+                    elif os.path.isdir(entry_path):
+                        shutil.rmtree(entry_path)
+                except Exception as e:
+                    logging.error(f"Failed to delete {entry_path}: {str(e)}")
+        else:
+            os.makedirs(pms_folder, exist_ok=True)
+        logging.info(f"Cleaned up files in folder: {pms_folder}")
     except Exception as e:
-        logging.error(f"Failed to initialize PMS folder for pid {pid}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to initialize PMS folder: {str(e)}")
+        logging.error(f"Failed to clean PMS folder for pid {pid}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to clean PMS folder: {str(e)}")
     archive_path = os.path.join(pms_folder, name)
     try:
         with open(archive_path, "wb") as f:
@@ -91,4 +100,5 @@ async def api_ccp_pull_output(
     except Exception as e:
         logging.error(f"Error during extraction of OUTPUT archive for pid {pid}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error during extraction of OUTPUT archive: {str(e)}")
+    
     return JSONResponse(content={"RESULT_CODE": 200, "RESULT_MSG": "Output file uploaded and extracted successfully"})
