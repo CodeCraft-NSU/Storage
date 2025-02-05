@@ -57,3 +57,38 @@ async def api_ccp_push_ccp(
         media_type="application/octet-stream",
         filename=f"{pid}_{ver}.ccp"
     )
+
+@router.post("/ccp/pull_output")
+async def api_ccp_pull_output(
+    pid: int = Form(..., description="Project ID"),
+    file: UploadFile = File(..., description="Compressed OUTPUT folder archive (tar.gz)"),
+    name: str = Form(..., description="Filename for the OUTPUT archive")
+):
+    pms_folder = f"/data/PMS/{pid}"
+    try:
+        if os.path.exists(pms_folder):
+            shutil.rmtree(pms_folder)
+            logging.info(f"Deleted existing folder: {pms_folder}")
+        os.makedirs(pms_folder, exist_ok=True)
+        logging.info(f"Created new folder: {pms_folder}")
+    except Exception as e:
+        logging.error(f"Failed to initialize PMS folder for pid {pid}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to initialize PMS folder: {str(e)}")
+    archive_path = os.path.join(pms_folder, name)
+    try:
+        with open(archive_path, "wb") as f:
+            f.write(await file.read())
+        logging.info(f"Successfully saved OUTPUT archive to {archive_path}")
+    except Exception as e:
+        logging.error(f"Error during file upload for pid {pid}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error during file upload: {str(e)}")
+    try:
+        with tarfile.open(archive_path, "r:gz") as tar:
+            tar.extractall(path=pms_folder)
+        logging.info(f"Extracted OUTPUT archive in folder: {pms_folder}")
+        os.remove(archive_path)
+        logging.info(f"Removed archive file: {archive_path}")
+    except Exception as e:
+        logging.error(f"Error during extraction of OUTPUT archive for pid {pid}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error during extraction of OUTPUT archive: {str(e)}")
+    return JSONResponse(content={"RESULT_CODE": 200, "RESULT_MSG": "Output file uploaded and extracted successfully"})
